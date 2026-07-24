@@ -63,7 +63,7 @@ export function useWebRTC() {
   }, []);
 
   // Handle incoming data channel messages (Headers, Chunks, Control)
-  const handleIncomingMessage = useCallback((senderId, data) => {
+  const handleIncomingMessage = useCallback(async (senderId, data) => {
     if (typeof data === 'string') {
       try {
         const msg = JSON.parse(data);
@@ -124,12 +124,23 @@ export function useWebRTC() {
       return;
     }
 
-    // Binary ArrayBuffer chunk received
+    // Binary ArrayBuffer / Uint8Array / Blob chunk received
+    let chunkBuffer = null;
     if (data instanceof ArrayBuffer) {
+      chunkBuffer = data;
+    } else if (ArrayBuffer.isView(data)) {
+      chunkBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    } else if (data && typeof data === 'object' && data.byteLength !== undefined && data.buffer) {
+      chunkBuffer = data.buffer.slice(data.byteOffset || 0, (data.byteOffset || 0) + data.byteLength);
+    } else if (data instanceof Blob) {
+      chunkBuffer = await data.arrayBuffer();
+    }
+
+    if (chunkBuffer) {
       for (const [fileId, buffer] of incomingBuffers.current.entries()) {
         if (buffer.bytesReceived < buffer.header.fileSize) {
-          buffer.chunks.push(data);
-          buffer.bytesReceived += data.byteLength;
+          buffer.chunks.push(chunkBuffer);
+          buffer.bytesReceived += chunkBuffer.byteLength;
 
           const now = Date.now();
           const elapsed = (now - buffer.lastSpeedCheck) / 1000;
