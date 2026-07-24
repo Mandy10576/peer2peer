@@ -25,7 +25,7 @@ export function useWebRTC() {
   const [transfers, setTransfers] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Active PeerJS data connections map: targetSocketId/peerId -> DataConnection
+  // Active DataConnections map: peerId -> DataConnection
   const dataConnections = useRef(new Map());
   // Incoming file chunk buffers: fileId -> buffer
   const incomingBuffers = useRef(new Map());
@@ -38,7 +38,6 @@ export function useWebRTC() {
     const info = getDeviceInfo();
     setMyPeerInfo(info);
 
-    // If custom Socket.IO signaling URL is set, connect to it
     if (SIGNALING_URL && SIGNALING_URL !== 'http://localhost:3001') {
       const newSocket = io(SIGNALING_URL, {
         transports: ['websocket', 'polling'],
@@ -62,14 +61,13 @@ export function useWebRTC() {
     }).catch((err) => console.warn('RDS Log failed:', err));
   }, []);
 
-  // Handle incoming data channel messages (Headers, Chunks, Control)
+  // Handle incoming DataChannel messages
   const handleIncomingMessage = useCallback(async (senderId, data) => {
     if (typeof data === 'string') {
       try {
         const msg = JSON.parse(data);
 
         if (msg.type === 'PEER_INFO') {
-          // Received peer metadata
           setPeers((prev) => {
             if (prev.some((p) => p.socketId === senderId)) return prev;
             if (soundEnabled) playSound('join');
@@ -178,7 +176,6 @@ export function useWebRTC() {
 
             if (soundEnabled) playSound('complete');
 
-            // Log to AWS RDS via Vercel Serverless Function
             logTransferToRDS({
               fileId,
               roomCode: roomId || 'DIRECT',
@@ -212,12 +209,11 @@ export function useWebRTC() {
   }, [soundEnabled, roomId, myPeerInfo, logTransferToRDS]);
 
   // Setup PeerJS connection listeners
-  const setupDataConnection = useCallback((conn, isHost) => {
+  const setupDataConnection = useCallback((conn) => {
     dataConnections.current.set(conn.peer, conn);
 
     conn.on('open', () => {
-      console.log('PeerJS DataConnection opened with:', conn.peer);
-      // Send device metadata
+      console.log('PeerConnection opened with:', conn.peer);
       const info = getDeviceInfo();
       conn.send(JSON.stringify({ type: 'PEER_INFO', peerInfo: info }));
 
@@ -233,16 +229,42 @@ export function useWebRTC() {
     });
 
     conn.on('close', () => {
-      console.log('PeerJS Connection closed:', conn.peer);
+      console.log('Connection closed with:', conn.peer);
       setPeers((prev) => prev.filter((p) => p.socketId !== conn.peer));
       dataConnections.current.delete(conn.peer);
       if (soundEnabled) playSound('leave');
     });
 
     conn.on('error', (err) => {
-      console.error('PeerConnection error:', err);
+      console.error('DataConnection error:', err);
     });
   }, [handleIncomingMessage, soundEnabled]);
+
+  // Initialize room host
+  const initAsRoomHost = useCallback((code) => {
+    const hostPeerId = `aerodrop-${code}`;
+    const peer = new Peer(hostPeerId, { config: ICE_SERVERS, debug: 1 });
+
+    peer.on('open', (id) => {
+      console.log('Host initialized for room:', code);
+      setRoomId(code);
+      setPeerInstance(peer);
+      if (typeof window !== 'undefined') {
+        window.history.pushState({}, '', `/?room=${code}`);
+      }
+    });
+
+    peer.on('connection', (conn) => {
+      console.log('Peer connected to host:', conn.peer);
+      setupDataConnection(conn);
+    });
+
+    peer.on('error', (err) => {
+      console.error('Host peer error:', err);
+    });
+
+    return peer;
+  }, [setupDataConnection]);
 
   // Create Room
   const createRoom = useCallback(() => {
@@ -251,62 +273,54 @@ export function useWebRTC() {
     for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    initAsRoomHost(code);
+  }, [initAsRoomHost]);
 
-    const peerId = `aerodrop-${code}`;
-    const peer = new Peer(peerId, { config: ICE_SERVERS, debug: 1 });
-
-    peer.on('open', (id) => {
-      console.log('Room created on PeerJS Cloud with ID:', id);
-      setRoomId(code);
-      setPeerInstance(peer);
-    });
-
-    peer.on('connection', (conn) => {
-      console.log('Incoming peer connection to room:', conn.peer);
-      setupDataConnection(conn, true);
-    });
-
-    peer.on('error', (err) => {
-      console.error('PeerJS create room error:', err);
-      // Retry if ID taken
-      if (err.type === 'unavailable-id') {
-        createRoom();
-      }
-    });
-  }, [setupDataConnection]);
-
-  // Join Room
+  // Join Room with auto-reclaim and mesh connection fallback
   const joinRoom = useCallback((code) => {
     const cleanCode = code ? code.trim().toUpperCase() : '';
     if (!cleanCode) return Promise.reject('Invalid room code');
 
     return new Promise((resolve, reject) => {
-      const myTempId = `aerodrop-client-${Math.random().toString(36).substr(2, 6)}`;
-      const peer = new Peer(myTempId, { config: ICE_SERVERS, debug: 1 });
+      const hostPeerId = `aerodrop-${cleanCode}`;
+      const clientPeerId = `aerodrop-${cleanCode}-c${Math.random().toString(36).substr(2, 5)}`;
+      const peer = new Peer(clientPeerId, { config: ICE_SERVERS, debug: 1 });
 
       peer.on('open', () => {
-        const hostPeerId = `aerodrop-${cleanCode}`;
-        console.log(`Connecting to host peer: ${hostPeerId}`);
+        console.log(`Client attempting connection to host ${hostPeerId}...`);
         const conn = peer.connect(hostPeerId, { reliable: true });
 
-        setupDataConnection(conn, false);
+        setupDataConnection(conn);
 
         conn.on('open', () => {
           setRoomId(cleanCode);
           setPeerInstance(peer);
+          if (typeof window !== 'undefined') {
+            window.history.pushState({}, '', `/?room=${cleanCode}`);
+          }
           resolve(cleanCode);
         });
 
-        conn.on('error', (err) => {
-          reject('Could not connect to room. Please check the code.');
+        // PeerJS listener for incoming secondary connections
+        peer.on('connection', (incomingConn) => {
+          setupDataConnection(incomingConn);
+        });
+
+        // If host ID aerodrop-CODE was destroyed (host refreshed/left), reclaim host role!
+        peer.on('error', (err) => {
+          console.warn('Peer error during join:', err.type);
+          if (err.type === 'peer-unavailable') {
+            console.log('Host unavailable. Reclaiming room host role...');
+            peer.destroy();
+            initAsRoomHost(cleanCode);
+            resolve(cleanCode);
+          } else {
+            reject('Could not join room. Please check room code.');
+          }
         });
       });
-
-      peer.on('error', (err) => {
-        reject('Could not join room. PeerJS connection error.');
-      });
     });
-  }, [setupDataConnection]);
+  }, [setupDataConnection, initAsRoomHost]);
 
   // Leave Room
   const leaveRoom = useCallback(() => {
@@ -318,9 +332,12 @@ export function useWebRTC() {
     setPeerInstance(null);
     setRoomId(null);
     setPeers([]);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/');
+    }
   }, [peerInstance]);
 
-  // Send Files to target or all peers
+  // Send Files to target peer
   const sendFiles = useCallback(
     async (targetId, files) => {
       const conn = dataConnections.current.get(targetId);
@@ -382,7 +399,6 @@ export function useWebRTC() {
             if (transferCancelStates.current.get(fileId)) break;
           }
 
-          // Buffer control
           if (conn.dataChannel && conn.dataChannel.bufferedAmount > 1024 * 1024) {
             await new Promise((resolve) => {
               const checkBuffer = () => {
