@@ -266,7 +266,7 @@ export function useWebRTC() {
     return peer;
   }, [setupDataConnection]);
 
-  // Create Room
+  // Create Room (Only when user explicitly clicks "Create Transfer Room")
   const createRoom = useCallback(() => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
@@ -276,23 +276,26 @@ export function useWebRTC() {
     initAsRoomHost(code);
   }, [initAsRoomHost]);
 
-  // Join Room with auto-reclaim and mesh connection fallback
+  // Join Room (Strict Validation: Reject if room code does not exist)
   const joinRoom = useCallback((code) => {
     const cleanCode = code ? code.trim().toUpperCase() : '';
-    if (!cleanCode) return Promise.reject('Invalid room code');
+    if (!cleanCode) return Promise.reject('Please enter a 6-character room code');
 
     return new Promise((resolve, reject) => {
       const hostPeerId = `aerodrop-${cleanCode}`;
       const clientPeerId = `aerodrop-${cleanCode}-c${Math.random().toString(36).substr(2, 5)}`;
       const peer = new Peer(clientPeerId, { config: ICE_SERVERS, debug: 1 });
 
+      let isConnectedToHost = false;
+
       peer.on('open', () => {
-        console.log(`Client attempting connection to host ${hostPeerId}...`);
+        console.log(`Connecting to host ${hostPeerId}...`);
         const conn = peer.connect(hostPeerId, { reliable: true });
 
         setupDataConnection(conn);
 
         conn.on('open', () => {
+          isConnectedToHost = true;
           setRoomId(cleanCode);
           setPeerInstance(peer);
           if (typeof window !== 'undefined') {
@@ -301,26 +304,19 @@ export function useWebRTC() {
           resolve(cleanCode);
         });
 
-        // PeerJS listener for incoming secondary connections
         peer.on('connection', (incomingConn) => {
           setupDataConnection(incomingConn);
         });
 
-        // If host ID aerodrop-CODE was destroyed (host refreshed/left), reclaim host role!
+        // Strict validation error handling: Reject if host peer is unavailable
         peer.on('error', (err) => {
-          console.warn('Peer error during join:', err.type);
-          if (err.type === 'peer-unavailable') {
-            console.log('Host unavailable. Reclaiming room host role...');
-            peer.destroy();
-            initAsRoomHost(cleanCode);
-            resolve(cleanCode);
-          } else {
-            reject('Could not join room. Please check room code.');
-          }
+          console.warn('Peer join error:', err.type);
+          peer.destroy();
+          reject(`Room "${cleanCode}" does not exist or has expired. Please check the code.`);
         });
       });
     });
-  }, [setupDataConnection, initAsRoomHost]);
+  }, [setupDataConnection]);
 
   // Leave Room
   const leaveRoom = useCallback(() => {
