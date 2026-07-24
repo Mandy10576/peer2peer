@@ -6,7 +6,6 @@ import {
   Pause, 
   X, 
   CheckCircle2, 
-  AlertCircle, 
   Download, 
   Eye, 
   FileText, 
@@ -26,24 +25,24 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
   if (!transfers || transfers.length === 0) return null;
 
   const getFileIcon = (type) => {
-    if (type?.startsWith('image/')) return <ImageIcon className="w-5 h-5 text-cyan-400" />;
-    if (type?.startsWith('video/')) return <Video className="w-5 h-5 text-purple-400" />;
-    if (type?.startsWith('audio/')) return <Music className="w-5 h-5 text-emerald-400" />;
-    return <FileText className="w-5 h-5 text-sky-400" />;
+    if (type?.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-cyan-400" />;
+    if (type?.startsWith('video/')) return <Video className="w-4 h-4 text-purple-400" />;
+    if (type?.startsWith('audio/')) return <Music className="w-4 h-4 text-emerald-400" />;
+    return <FileText className="w-4 h-4 text-sky-400" />;
   };
 
   const activeCount = transfers.filter((t) => t.status === 'transferring' || t.status === 'paused').length;
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-full max-w-md px-4 sm:px-0">
+    <div className="fixed bottom-2 left-2 right-2 sm:left-auto sm:right-4 sm:bottom-4 z-40 w-auto sm:w-full sm:max-w-md">
       <div className="glass-panel rounded-2xl border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
         {/* Drawer Header */}
         <div
           onClick={() => setIsExpanded(!isExpanded)}
-          className="p-4 bg-slate-900/90 flex items-center justify-between cursor-pointer border-b border-slate-800/80 hover:bg-slate-900 transition-colors"
+          className="p-3 sm:p-4 bg-slate-900/90 flex items-center justify-between cursor-pointer border-b border-slate-800/80 hover:bg-slate-900 transition-colors"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
               {transfers.length}
             </div>
             <div>
@@ -61,30 +60,30 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
 
         {/* Transfer Cards List */}
         {isExpanded && (
-          <div className="max-h-80 overflow-y-auto p-3 space-y-2.5 divide-y divide-slate-800/50">
+          <div className="max-h-64 sm:max-h-80 overflow-y-auto p-2.5 sm:p-3 space-y-2 divide-y divide-slate-800/50">
             {transfers.map((t) => (
-              <div key={t.id} className="pt-2.5 first:pt-0 space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
+              <div key={t.id} className="pt-2 first:pt-0 space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 shrink-0">
                       {getFileIcon(t.fileType)}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-xs text-slate-200 truncate max-w-[180px]">
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-xs text-slate-200 truncate max-w-[120px] sm:max-w-[180px]">
                           {t.fileName}
                         </span>
                         {t.type === 'send' ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium inline-flex items-center gap-0.5">
-                            <ArrowUpRight className="w-2.5 h-2.5" /> Sending
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-400 font-medium inline-flex items-center gap-0.5">
+                            <ArrowUpRight className="w-2.5 h-2.5" /> Send
                           </span>
                         ) : (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium inline-flex items-center gap-0.5">
-                            <ArrowDownLeft className="w-2.5 h-2.5" /> Receiving
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-medium inline-flex items-center gap-0.5">
+                            <ArrowDownLeft className="w-2.5 h-2.5" /> Recv
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[10px] text-slate-400 mt-0.5">
                         {formatBytes(t.transferredBytes || 0)} / {formatBytes(t.fileSize)} •{' '}
                         <span className="text-cyan-400 font-mono">{t.speed}</span>
                       </p>
@@ -96,8 +95,8 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                     {t.status === 'transferring' && (
                       <button
                         onClick={() => pauseTransfer(t.fileId, t.receiverSocketId || t.senderSocketId)}
-                        className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 transition-colors"
-                        title="Pause Transfer"
+                        className="p-1 rounded-lg bg-amber-500/10 text-amber-400"
+                        title="Pause"
                       >
                         <Pause className="w-3.5 h-3.5" />
                       </button>
@@ -106,8 +105,8 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                     {t.status === 'paused' && (
                       <button
                         onClick={() => resumeTransfer(t.fileId, t.receiverSocketId || t.senderSocketId)}
-                        className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors"
-                        title="Resume Transfer"
+                        className="p-1 rounded-lg bg-emerald-500/10 text-emerald-400"
+                        title="Resume"
                       >
                         <Play className="w-3.5 h-3.5" />
                       </button>
@@ -116,8 +115,8 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                     {(t.status === 'transferring' || t.status === 'paused') && (
                       <button
                         onClick={() => cancelTransfer(t.fileId, t.receiverSocketId || t.senderSocketId)}
-                        className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors"
-                        title="Cancel Transfer"
+                        className="p-1 rounded-lg bg-rose-500/10 text-rose-400"
+                        title="Cancel"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -127,16 +126,16 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setPreviewTransfer(t)}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors"
-                          title="Preview File"
+                          className="p-1 rounded-lg bg-slate-800 text-slate-200"
+                          title="Preview"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <a
                           href={t.blobUrl}
                           download={t.fileName}
-                          className="p-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-colors font-bold"
-                          title="Download File"
+                          className="p-1 rounded-lg bg-cyan-500 text-slate-950 font-bold"
+                          title="Download"
                         >
                           <Download className="w-3.5 h-3.5" />
                         </a>
@@ -146,18 +145,12 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                     {t.status === 'completed' && t.type === 'send' && (
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     )}
-
-                    {t.status === 'cancelled' && (
-                      <span className="text-[10px] text-rose-400 font-semibold px-2 py-0.5 rounded bg-rose-500/10">
-                        Cancelled
-                      </span>
-                    )}
                   </div>
                 </div>
 
-                {/* Live Animated Progress Bar */}
+                {/* Live Progress Bar */}
                 {(t.status === 'transferring' || t.status === 'paused') && (
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 rounded-full ${
@@ -168,7 +161,7 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                         style={{ width: `${t.progress}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-[10px] text-slate-400">
+                    <div className="flex justify-between text-[9px] text-slate-400">
                       <span>{t.progress}%</span>
                       <span>ETA: {t.timeRemaining}</span>
                     </div>
