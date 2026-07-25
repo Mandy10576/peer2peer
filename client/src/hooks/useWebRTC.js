@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { getDeviceInfo, formatBytes, formatTime } from '../utils/deviceInfo';
 import { playSound } from '../utils/audioNotification';
 
-const CHUNK_SIZE = 64 * 1024; // 64KB per WebRTC data chunk
+const CHUNK_SIZE = 256 * 1024; // 256KB per WebRTC data chunk for maximum P2P throughput
 const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
@@ -395,13 +395,14 @@ export function useWebRTC() {
             if (transferCancelStates.current.get(fileId)) break;
           }
 
-          if (conn.dataChannel && conn.dataChannel.bufferedAmount > 1024 * 1024) {
+          // High-performance backpressure: prevent buffer overflow without artificial 50ms delays
+          if (conn.dataChannel && conn.dataChannel.bufferedAmount > 4 * 1024 * 1024) {
             await new Promise((resolve) => {
               const checkBuffer = () => {
-                if (conn.dataChannel.bufferedAmount <= 256 * 1024) {
+                if (!conn.dataChannel || conn.dataChannel.bufferedAmount <= 512 * 1024) {
                   resolve();
                 } else {
-                  setTimeout(checkBuffer, 50);
+                  setTimeout(checkBuffer, 2);
                 }
               };
               checkBuffer();
@@ -426,30 +427,31 @@ export function useWebRTC() {
           const now = Date.now();
           const elapsed = (now - lastSpeedCheck) / 1000;
 
-          if (elapsed >= 0.5) {
+          // Update speed & UI progress throttled to max 5 times per second (every 200ms) to avoid DOM re-render bottlenecks
+          if (elapsed >= 0.2 || offset >= file.size) {
             const bytesSinceLast = offset - lastBytesCount;
             currentSpeed = bytesSinceLast / elapsed;
             lastSpeedCheck = now;
             lastBytesCount = offset;
+
+            const remainingBytes = file.size - offset;
+            const etaSecs = currentSpeed > 0 ? remainingBytes / currentSpeed : 0;
+            const progress = Math.min(100, Math.round((offset / file.size) * 100));
+
+            setTransfers((prev) =>
+              prev.map((t) =>
+                t.fileId === fileId
+                  ? {
+                      ...t,
+                      transferredBytes: offset,
+                      progress,
+                      speed: `${formatBytes(currentSpeed)}/s`,
+                      timeRemaining: formatTime(etaSecs)
+                    }
+                  : t
+              )
+            );
           }
-
-          const remainingBytes = file.size - offset;
-          const etaSecs = currentSpeed > 0 ? remainingBytes / currentSpeed : 0;
-          const progress = Math.min(100, Math.round((offset / file.size) * 100));
-
-          setTransfers((prev) =>
-            prev.map((t) =>
-              t.fileId === fileId
-                ? {
-                    ...t,
-                    transferredBytes: offset,
-                    progress,
-                    speed: `${formatBytes(currentSpeed)}/s`,
-                    timeRemaining: formatTime(etaSecs)
-                  }
-                : t
-            )
-          );
         }
 
         if (offset >= file.size) {
