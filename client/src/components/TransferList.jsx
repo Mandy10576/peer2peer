@@ -20,9 +20,10 @@ import FilePreviewModal from './FilePreviewModal';
 
 export default function TransferList({ transfers, pauseTransfer, resumeTransfer, cancelTransfer }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [previewTransfer, setPreviewTransfer] = useState(null);
 
-  if (!transfers || transfers.length === 0) return null;
+  if (!transfers || transfers.length === 0 || isDismissed) return null;
 
   const getFileIcon = (type) => {
     if (type?.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-cyan-400" />;
@@ -34,28 +35,46 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
   const activeCount = transfers.filter((t) => t.status === 'transferring' || t.status === 'paused').length;
 
   return (
-    <div className="fixed bottom-2 left-2 right-2 sm:left-auto sm:right-4 sm:bottom-4 z-40 w-auto sm:w-full sm:max-w-md">
-      <div className="glass-panel rounded-2xl border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
+    <div className="fixed bottom-2 left-2 right-2 sm:left-auto sm:right-4 sm:bottom-4 z-40 w-auto sm:w-full sm:max-w-md pointer-events-none">
+      <div className="glass-panel rounded-2xl border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300 pointer-events-auto">
         {/* Drawer Header */}
         <div
-          onClick={() => setIsExpanded(!isExpanded)}
           className="p-3 sm:p-4 bg-slate-900/90 flex items-center justify-between cursor-pointer border-b border-slate-800/80 hover:bg-slate-900 transition-colors"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
+          <div
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2.5 flex-1 min-w-0"
+          >
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
               {transfers.length}
             </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-200">Active File Transfers</h4>
-              <p className="text-[10px] text-slate-400">
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-slate-200 truncate">Active File Transfers</h4>
+              <p className="text-[10px] text-slate-400 truncate">
                 {activeCount > 0 ? `${activeCount} in progress` : 'All transfers completed'}
               </p>
             </div>
           </div>
 
-          <button className="p-1 text-slate-400 hover:text-slate-200">
-            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800"
+              title={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDismissed(true);
+              }}
+              className="p-1 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors"
+              title="Close Drawer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Transfer Cards List */}

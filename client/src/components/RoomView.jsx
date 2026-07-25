@@ -73,7 +73,7 @@ export default function RoomView({ roomId, myPeerInfo, peers, sendFiles, leaveRo
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="flex-1 flex flex-col items-center justify-between p-3 sm:p-6 relative min-h-[calc(100vh-55px)]"
+      className="flex-1 flex flex-col items-center justify-between p-3 sm:p-6 pb-36 sm:pb-24 relative min-h-[calc(100vh-55px)]"
     >
       {/* Hidden File Input */}
       <input
