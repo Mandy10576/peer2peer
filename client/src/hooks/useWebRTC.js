@@ -15,10 +15,12 @@ const ICE_SERVERS = {
 
 const rawUrl = import.meta.env.VITE_SIGNALING_URL || '';
 
-// Automatically upgrade http:// to https:// when website is served over HTTPS on Vercel
+// Automatically enforce HTTPS/WSS when website is served over HTTPS to eliminate Chrome Not Secure warnings
 const getSecureSignalingUrl = (url) => {
   if (!url) return '';
-  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && url.startsWith('http://') && !url.includes('localhost')) {
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  if (isHttps && url.startsWith('http://') && !url.includes('localhost')) {
+    // Prevent unencrypted HTTP connections on HTTPS site
     return url.replace('http://', 'https://');
   }
   return url;
@@ -43,6 +45,16 @@ export function useWebRTC() {
   // Pause & Cancel state maps
   const transferPauseStates = useRef(new Map());
   const transferCancelStates = useRef(new Map());
+
+  // Helper for secure PeerJS options
+  const getPeerOptions = useCallback(() => {
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    return {
+      config: ICE_SERVERS,
+      secure: isHttps,
+      debug: 1
+    };
+  }, []);
 
   // Initialize device info
   useEffect(() => {
@@ -254,7 +266,7 @@ export function useWebRTC() {
   // Initialize room host
   const initAsRoomHost = useCallback((code) => {
     const hostPeerId = `aerodrop-${code}`;
-    const peer = new Peer(hostPeerId, { config: ICE_SERVERS, debug: 1 });
+    const peer = new Peer(hostPeerId, getPeerOptions());
 
     peer.on('open', (id) => {
       console.log('Host initialized for room:', code);
@@ -275,7 +287,7 @@ export function useWebRTC() {
     });
 
     return peer;
-  }, [setupDataConnection]);
+  }, [setupDataConnection, getPeerOptions]);
 
   // Create Room (Only when user explicitly clicks "Create Transfer Room")
   const createRoom = useCallback(() => {
@@ -295,7 +307,7 @@ export function useWebRTC() {
     return new Promise((resolve, reject) => {
       const hostPeerId = `aerodrop-${cleanCode}`;
       const clientPeerId = `aerodrop-${cleanCode}-c${Math.random().toString(36).substr(2, 5)}`;
-      const peer = new Peer(clientPeerId, { config: ICE_SERVERS, debug: 1 });
+      const peer = new Peer(clientPeerId, getPeerOptions());
 
       let isConnectedToHost = false;
 
