@@ -13,7 +13,18 @@ const ICE_SERVERS = {
   ]
 };
 
-const SIGNALING_URL = import.meta.env.VITE_SIGNALING_URL || '';
+const rawUrl = import.meta.env.VITE_SIGNALING_URL || '';
+
+// Automatically upgrade http:// to https:// when website is served over HTTPS on Vercel
+const getSecureSignalingUrl = (url) => {
+  if (!url) return '';
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && url.startsWith('http://') && !url.includes('localhost')) {
+    return url.replace('http://', 'https://');
+  }
+  return url;
+};
+
+const SIGNALING_URL = getSecureSignalingUrl(rawUrl);
 
 export function useWebRTC() {
   const [socket, setSocket] = useState(null);
