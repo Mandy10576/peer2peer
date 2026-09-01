@@ -25,7 +25,7 @@ export default function QRCodeModal({ roomId, onClose }) {
 
         {/* Title */}
         <div className="space-y-1">
-          <div className="w-10 h-10 mx-auto rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+          <div className="w-10 h-10 mx-auto rounded-xl bg-lime-500/10 border border-lime-500/20 text-lime-400 flex items-center justify-center">
             <QrCode className="w-5 h-5" />
           </div>
           <h3 className="text-lg font-bold text-slate-100">Scan to Join Room</h3>
@@ -46,7 +46,7 @@ export default function QRCodeModal({ roomId, onClose }) {
             </div>
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-lime-500/10 hover:bg-lime-500/20 text-lime-400 text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy Link'}</span>

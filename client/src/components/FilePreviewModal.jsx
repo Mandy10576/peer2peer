@@ -15,7 +15,7 @@ export default function FilePreviewModal({ transfer, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+            <div className="p-2 rounded-xl bg-lime-500/10 text-lime-400">
               {isImage ? <ImageIcon className="w-5 h-5" /> : isVideo ? <Video className="w-5 h-5" /> : isAudio ? <Music className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
             </div>
             <div>
@@ -59,7 +59,7 @@ export default function FilePreviewModal({ transfer, onClose }) {
           <a
             href={transfer.blobUrl}
             download={transfer.fileName}
-            className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition-colors shadow-lg shadow-cyan-500/20"
+            className="px-5 py-2.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition-colors shadow-lg shadow-lime-500/20"
           >
             <Download className="w-4 h-4" />
             <span>Download File</span>

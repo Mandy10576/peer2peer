@@ -64,7 +64,7 @@ export default function CameraQRScannerModal({ onScanSuccess, onClose }) {
 
         {/* Title */}
         <div className="space-y-1">
-          <div className="w-10 h-10 mx-auto rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+          <div className="w-10 h-10 mx-auto rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center">
             <Camera className="w-5 h-5" />
           </div>
           <h3 className="text-base font-bold text-slate-100">Scan QR Code with Camera</h3>

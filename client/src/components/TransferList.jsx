@@ -26,10 +26,10 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
   if (!transfers || transfers.length === 0 || isDismissed) return null;
 
   const getFileIcon = (type) => {
-    if (type?.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-cyan-400" />;
-    if (type?.startsWith('video/')) return <Video className="w-4 h-4 text-purple-400" />;
+    if (type?.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-lime-400" />;
+    if (type?.startsWith('video/')) return <Video className="w-4 h-4 text-orange-400" />;
     if (type?.startsWith('audio/')) return <Music className="w-4 h-4 text-emerald-400" />;
-    return <FileText className="w-4 h-4 text-sky-400" />;
+    return <FileText className="w-4 h-4 text-lime-400" />;
   };
 
   const activeCount = transfers.filter((t) => t.status === 'transferring' || t.status === 'paused').length;
@@ -45,7 +45,7 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center gap-2.5 flex-1 min-w-0"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-lime-500/10 border border-lime-500/20 text-lime-400 flex items-center justify-center font-bold text-xs shrink-0">
               {transfers.length}
             </div>
             <div className="min-w-0">
@@ -93,7 +93,7 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                           {t.fileName}
                         </span>
                         {t.type === 'send' ? (
-                          <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-400 font-medium inline-flex items-center gap-0.5">
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-green-500/10 text-green-400 font-medium inline-flex items-center gap-0.5">
                             <ArrowUpRight className="w-2.5 h-2.5" /> Send
                           </span>
                         ) : (
@@ -104,7 +104,7 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                       </div>
                       <p className="text-[10px] text-slate-400 mt-0.5">
                         {formatBytes(t.transferredBytes || 0)} / {formatBytes(t.fileSize)} •{' '}
-                        <span className="text-cyan-400 font-mono">{t.speed}</span>
+                        <span className="text-lime-400 font-mono">{t.speed}</span>
                       </p>
                     </div>
                   </div>
@@ -153,7 +153,7 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                         <a
                           href={t.blobUrl}
                           download={t.fileName}
-                          className="p-1 rounded-lg bg-cyan-500 text-slate-950 font-bold"
+                          className="p-1 rounded-lg bg-lime-500 text-slate-950 font-bold"
                           title="Download"
                         >
                           <Download className="w-3.5 h-3.5" />
@@ -175,7 +175,7 @@ export default function TransferList({ transfers, pauseTransfer, resumeTransfer,
                         className={`h-full transition-all duration-300 rounded-full ${
                           t.status === 'paused'
                             ? 'bg-amber-400'
-                            : 'bg-gradient-to-r from-cyan-400 to-purple-500 animate-pulse'
+                            : 'bg-gradient-to-r from-lime-400 to-orange-500 animate-pulse'
                         }`}
                         style={{ width: `${t.progress}%` }}
                       />
