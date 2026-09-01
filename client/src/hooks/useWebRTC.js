@@ -40,6 +40,8 @@ export function useWebRTC() {
 
   // Mirrors myPeerInfo for use inside callbacks without stale closures
   const myPeerInfoRef = useRef(null);
+  // Mirrors peerInstance so the unload handler always closes the live peer
+  const peerInstanceRef = useRef(null);
 
   // Active DataConnections map: peerId -> DataConnection
   const dataConnections = useRef(new Map());
@@ -77,6 +79,24 @@ export function useWebRTC() {
       setSocket(newSocket);
       return () => newSocket.disconnect();
     }
+  }, []);
+
+  // Gracefully close all P2P connections on refresh/close so peers are removed
+  // from the other side immediately instead of waiting for an ICE timeout.
+  useEffect(() => {
+    const closeAllConnections = () => {
+      dataConnections.current.forEach((conn) => conn.close());
+      dataConnections.current.clear();
+      if (peerInstanceRef.current) {
+        peerInstanceRef.current.destroy();
+      }
+    };
+    window.addEventListener('pagehide', closeAllConnections);
+    window.addEventListener('beforeunload', closeAllConnections);
+    return () => {
+      window.removeEventListener('pagehide', closeAllConnections);
+      window.removeEventListener('beforeunload', closeAllConnections);
+    };
   }, []);
 
   // Helper to log transfer to Vercel Serverless Function -> AWS RDS
@@ -267,17 +287,22 @@ export function useWebRTC() {
   }, [handleIncomingMessage, soundEnabled]);
 
   // Initialize room host
-  const initAsRoomHost = useCallback((code) => {
+  const initAsRoomHost = useCallback((code, onReady, onFail) => {
     const hostPeerId = `aerodrop-${code}`;
     const peer = new Peer(hostPeerId, getPeerOptions());
 
     peer.on('open', (id) => {
       console.log('Host initialized for room:', code);
       setRoomId(code);
+      peerInstanceRef.current = peer;
       setPeerInstance(peer);
       if (typeof window !== 'undefined') {
         window.history.pushState({}, '', `/?room=${code}`);
+        // Remember that this browser originally created this room code, so it
+        // can reclaim the host role if it rejoins after the room went empty.
+        sessionStorage.setItem('aerodrop_hosted_room', code);
       }
+      if (onReady) onReady(code);
     });
 
     peer.on('connection', (conn) => {
@@ -287,6 +312,7 @@ export function useWebRTC() {
 
     peer.on('error', (err) => {
       console.error('Host peer error:', err);
+      if (onFail) onFail(err);
     });
 
     return peer;
@@ -323,6 +349,7 @@ export function useWebRTC() {
         conn.on('open', () => {
           isConnectedToHost = true;
           setRoomId(cleanCode);
+          peerInstanceRef.current = peer;
           setPeerInstance(peer);
           if (typeof window !== 'undefined') {
             window.history.pushState({}, '', `/?room=${cleanCode}`);
@@ -334,15 +361,33 @@ export function useWebRTC() {
           setupDataConnection(incomingConn);
         });
 
-        // Strict validation error handling: Reject if host peer is unavailable
+        // Strict validation error handling
         peer.on('error', (err) => {
           console.warn('Peer join error:', err.type);
           peer.destroy();
+
+          // If the host slot is free (host left/refreshed) and THIS browser was
+          // the one that originally created this exact room, reclaim host role
+          // instead of failing, so the remaining peer stays reachable.
+          const hostedRoom = typeof window !== 'undefined'
+            ? sessionStorage.getItem('aerodrop_hosted_room')
+            : null;
+
+          if (err.type === 'peer-unavailable' && !isConnectedToHost && hostedRoom === cleanCode) {
+            console.log('Original host reclaiming room:', cleanCode);
+            initAsRoomHost(
+              cleanCode,
+              (reclaimedCode) => resolve(reclaimedCode),
+              () => reject(`Room "${cleanCode}" does not exist or has expired. Please check the code.`)
+            );
+            return;
+          }
+
           reject(`Room "${cleanCode}" does not exist or has expired. Please check the code.`);
         });
       });
     });
-  }, [setupDataConnection]);
+  }, [setupDataConnection, initAsRoomHost]);
 
   // Leave Room
   const leaveRoom = useCallback(() => {
@@ -351,6 +396,7 @@ export function useWebRTC() {
     }
     dataConnections.current.forEach((conn) => conn.close());
     dataConnections.current.clear();
+    peerInstanceRef.current = null;
     setPeerInstance(null);
     setRoomId(null);
     setPeers([]);
