@@ -96,8 +96,13 @@ export function useWebRTC() {
 
         if (msg.type === 'PEER_INFO') {
           setPeers((prev) => {
-            if (prev.some((p) => p.socketId === senderId)) return prev;
-            if (soundEnabled) playSound('join');
+            const exists = prev.some((p) => p.socketId === senderId);
+            if (!exists && soundEnabled) playSound('join');
+            if (exists) {
+              return prev.map((p) =>
+                p.socketId === senderId ? { socketId: senderId, ...msg.peerInfo } : p
+              );
+            }
             return [...prev, { socketId: senderId, ...msg.peerInfo }];
           });
         } else if (msg.type === 'FILE_HEADER') {
@@ -243,12 +248,6 @@ export function useWebRTC() {
       console.log('PeerConnection opened with:', conn.peer);
       const info = myPeerInfoRef.current || getDeviceInfo();
       conn.send(JSON.stringify({ type: 'PEER_INFO', peerInfo: info }));
-
-      setPeers((prev) => {
-        if (prev.some((p) => p.socketId === conn.peer)) return prev;
-        if (soundEnabled) playSound('join');
-        return [...prev, { socketId: conn.peer, ...info }];
-      });
     });
 
     conn.on('data', (data) => {
