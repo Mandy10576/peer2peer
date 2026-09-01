@@ -55,13 +55,9 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-start sm:justify-center px-4 pt-4 pb-3 sm:py-5 relative overflow-hidden min-h-[calc(100vh-57px)]">
-      {/* Background ambient glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-lime-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
-
       <div className="max-w-4xl w-full text-center space-y-3 sm:space-y-4 relative z-10">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[10px] sm:text-xs text-lime-400 shadow-xl">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] sm:text-xs text-lime-400 shadow-xl">
           <Sparkles className="w-3 h-3" />
           <span>Server-less Direct Peer-to-Peer Transfer</span>
         </div>
@@ -69,9 +65,9 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
         {/* Main Heading */}
         <div className="space-y-1.5 sm:space-y-2">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            Transfer files <span className="bg-gradient-to-r from-lime-400 via-lime-300 to-orange-400 bg-clip-text text-transparent">directly</span> across devices.
+            Transfer files <span className="text-lime-400">directly</span> across devices.
           </h1>
-          <p className="hidden sm:block text-slate-400 text-xs sm:text-sm max-w-xl mx-auto font-normal px-2">
+          <p className="hidden sm:block text-neutral-400 text-xs sm:text-sm max-w-xl mx-auto font-normal px-2">
             No cloud uploads. No size limits. High-speed WebRTC data channels stream files directly between devices.
           </p>
         </div>
@@ -79,18 +75,18 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
         {/* Action Cards: Create Room or Join Room */}
         <div className="grid md:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto text-left">
           {/* Create Room Card */}
-          <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800/80 flex flex-col justify-between hover:border-lime-500/30 transition-all shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 text-lime-500/10 group-hover:text-lime-500/20 transition-colors">
+          <div className="glass-panel p-4 sm:p-5 rounded-2xl flex flex-col justify-between hover:border-lime-500 transition-colors relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 text-neutral-800">
               <Zap className="w-14 h-14 sm:w-16 sm:h-16 stroke-[1]" />
             </div>
 
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-lime-500/10 border border-lime-500/20 flex items-center justify-center text-lime-400 shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-lime-500 flex items-center justify-center text-black shrink-0">
                 <Wifi className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-bold text-slate-100">Create a New Room</h3>
-                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 leading-snug">
+                <h3 className="text-sm sm:text-base font-bold text-neutral-100">Create a New Room</h3>
+                <p className="text-[11px] sm:text-xs text-neutral-400 mt-0.5 leading-snug">
                   Instant room code or QR to share with nearby/remote devices.
                 </p>
               </div>
@@ -100,7 +96,7 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
               <button
                 onClick={createRoom}
                 disabled={!isConnected}
-                className="w-full py-2.5 px-5 rounded-xl font-semibold bg-gradient-to-r from-lime-500 to-green-600 hover:from-lime-400 hover:to-green-500 text-slate-950 shadow-lg shadow-lime-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 active:scale-[0.98] text-xs sm:text-sm"
+                className="w-full py-2.5 px-5 rounded-xl font-semibold bg-lime-500 hover:bg-lime-400 text-black flex items-center justify-center gap-2 transition-colors disabled:opacity-50 active:scale-[0.98] text-xs sm:text-sm"
               >
                 <span>Create Transfer Room</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -109,18 +105,18 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
           </div>
 
           {/* Join Room Card */}
-          <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800/80 flex flex-col justify-between hover:border-orange-500/30 transition-all shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 text-orange-500/10 group-hover:text-orange-500/20 transition-colors">
+          <div className="glass-panel p-4 sm:p-5 rounded-2xl flex flex-col justify-between hover:border-orange-500 transition-colors relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 text-neutral-800">
               <Cpu className="w-14 h-14 sm:w-16 sm:h-16 stroke-[1]" />
             </div>
 
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-500 flex items-center justify-center text-black shrink-0">
                 <Laptop className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-bold text-slate-100">Join Existing Room</h3>
-                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 leading-snug">
+                <h3 className="text-sm sm:text-base font-bold text-neutral-100">Join Existing Room</h3>
+                <p className="text-[11px] sm:text-xs text-neutral-400 mt-0.5 leading-snug">
                   Enter 6-digit room code or scan QR with camera.
                 </p>
               </div>
@@ -135,12 +131,12 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                     placeholder="e.g. DROP01"
-                    className="w-full py-2.5 px-3.5 rounded-xl glass-input tracking-widest text-center font-mono font-bold text-sm sm:text-base uppercase placeholder:tracking-normal placeholder:font-sans placeholder:text-slate-600 placeholder:text-xs"
+                    className="w-full py-2.5 px-3.5 rounded-xl glass-input tracking-widest text-center font-mono font-bold text-sm sm:text-base uppercase placeholder:tracking-normal placeholder:font-sans placeholder:text-neutral-600 placeholder:text-xs"
                   />
                   <button
                     type="button"
                     onClick={handlePaste}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-200 transition-colors"
+                    className="absolute right-2.5 top-1/2 -tranneutral-y-1/2 p-1.5 text-neutral-400 hover:text-neutral-200 transition-colors"
                     title="Paste Code"
                   >
                     <Clipboard className="w-3.5 h-3.5" />
@@ -151,7 +147,7 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
                 <button
                   type="button"
                   onClick={() => setShowCameraScanner(true)}
-                  className="py-2.5 px-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/20 flex items-center justify-center shrink-0 transition-colors"
+                  className="py-2.5 px-3 rounded-xl bg-orange-500 hover:bg-orange-400 text-black flex items-center justify-center shrink-0 transition-colors"
                   title="Scan QR Code with Camera"
                 >
                   <Camera className="w-4 h-4" />
@@ -163,7 +159,7 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
               <button
                 type="submit"
                 disabled={!isConnected || !joinCode.trim() || isJoining}
-                className="w-full py-2.5 px-5 rounded-xl font-semibold bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 hover:border-slate-600 flex items-center justify-center gap-2 transition-all disabled:opacity-50 active:scale-[0.98] text-xs sm:text-sm"
+                className="w-full py-2.5 px-5 rounded-xl font-semibold bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border border-neutral-700 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 active:scale-[0.98] text-xs sm:text-sm"
               >
                 {isJoining ? (
                   <span>Joining Room...</span>
@@ -180,17 +176,17 @@ export default function HomeView({ createRoom, joinRoom, isConnected }) {
 
         {/* Feature Highlights Strip */}
         <div className="hidden sm:flex flex-wrap items-center justify-center gap-2.5 max-w-3xl mx-auto pt-1">
-          <div className="px-3 py-1.5 rounded-full bg-slate-900/60 border border-slate-800/60 flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[11px] font-medium text-slate-300">100% Direct P2P</span>
+          <div className="px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 text-lime-400 shrink-0" />
+            <span className="text-[11px] font-medium text-neutral-300">100% Direct P2P</span>
           </div>
-          <div className="px-3 py-1.5 rounded-full bg-slate-900/60 border border-slate-800/60 flex items-center gap-1.5">
+          <div className="px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-lime-400 shrink-0" />
-            <span className="text-[11px] font-medium text-slate-300">Maximum Speed</span>
+            <span className="text-[11px] font-medium text-neutral-300">Maximum Speed</span>
           </div>
-          <div className="px-3 py-1.5 rounded-full bg-slate-900/60 border border-slate-800/60 flex items-center gap-1.5">
+          <div className="px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 flex items-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-            <span className="text-[11px] font-medium text-slate-300">Cross-Platform</span>
+            <span className="text-[11px] font-medium text-neutral-300">Cross-Platform</span>
           </div>
         </div>
       </div>

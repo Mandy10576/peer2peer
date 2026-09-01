@@ -52,27 +52,27 @@ export default function CameraQRScannerModal({ onScanSuccess, onClose }) {
   }, [onScanSuccess]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
-      <div className="glass-panel w-full max-w-sm p-5 rounded-2xl border border-slate-800 shadow-2xl relative space-y-4 text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 animate-fade-in">
+      <div className="glass-panel w-full max-w-sm p-5 rounded-2xl shadow-2xl relative space-y-4 text-center">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-900 rounded-xl transition-colors"
+          className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 rounded-xl transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Title */}
         <div className="space-y-1">
-          <div className="w-10 h-10 mx-auto rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center">
+          <div className="w-10 h-10 mx-auto rounded-xl bg-orange-500 text-black flex items-center justify-center">
             <Camera className="w-5 h-5" />
           </div>
-          <h3 className="text-base font-bold text-slate-100">Scan QR Code with Camera</h3>
-          <p className="text-xs text-slate-400">Point your camera at another device's room QR code</p>
+          <h3 className="text-base font-bold text-neutral-100">Scan QR Code with Camera</h3>
+          <p className="text-xs text-neutral-400">Point your camera at another device's room QR code</p>
         </div>
 
         {/* Camera Preview Container */}
-        <div className="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 min-h-[240px] flex items-center justify-center">
+        <div className="relative rounded-2xl overflow-hidden bg-black border border-neutral-800 min-h-[240px] flex items-center justify-center">
           <div id="qr-reader-video" className="w-full h-full" />
           {errorMessage && (
             <div className="p-4 text-center space-y-2">
@@ -82,7 +82,7 @@ export default function CameraQRScannerModal({ onScanSuccess, onClose }) {
           )}
         </div>
 
-        <p className="text-[11px] text-slate-500">Scanning will automatically join the room</p>
+        <p className="text-[11px] text-neutral-500">Scanning will automatically join the room</p>
       </div>
     </div>
   );

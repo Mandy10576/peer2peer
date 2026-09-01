@@ -39,7 +39,7 @@ export default function App() {
   }, [isConnected, roomId, joinRoom]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-slate-100 font-sans selection:bg-lime-500/30 selection:text-lime-200">
+    <div className="min-h-screen flex flex-col bg-black text-neutral-100 font-sans selection:bg-lime-500/30 selection:text-lime-200">
       {/* Navbar Header */}
       <Navbar
         isConnected={isConnected}

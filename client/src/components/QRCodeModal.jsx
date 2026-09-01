@@ -13,23 +13,23 @@ export default function QRCodeModal({ roomId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="glass-panel w-full max-w-sm p-6 rounded-2xl border border-slate-800 shadow-2xl relative space-y-5 text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 animate-fade-in">
+      <div className="glass-panel w-full max-w-sm p-6 rounded-2xl shadow-2xl relative space-y-5 text-center">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 rounded-xl transition-colors"
+          className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 rounded-xl transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Title */}
         <div className="space-y-1">
-          <div className="w-10 h-10 mx-auto rounded-xl bg-lime-500/10 border border-lime-500/20 text-lime-400 flex items-center justify-center">
+          <div className="w-10 h-10 mx-auto rounded-xl bg-lime-500 text-black flex items-center justify-center">
             <QrCode className="w-5 h-5" />
           </div>
-          <h3 className="text-lg font-bold text-slate-100">Scan to Join Room</h3>
-          <p className="text-xs text-slate-400">Scan this QR code with your mobile camera or tablet</p>
+          <h3 className="text-lg font-bold text-neutral-100">Scan to Join Room</h3>
+          <p className="text-xs text-neutral-400">Scan this QR code with your mobile camera or tablet</p>
         </div>
 
         {/* QR Code Container */}
@@ -39,14 +39,14 @@ export default function QRCodeModal({ roomId, onClose }) {
 
         {/* Room Code & Copy Button */}
         <div className="space-y-3 pt-2">
-          <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 flex items-center justify-between">
+          <div className="p-3 bg-neutral-900 rounded-xl border border-neutral-800 flex items-center justify-between">
             <div className="text-left">
-              <span className="text-[10px] text-slate-500 uppercase font-semibold block">Room Code</span>
-              <span className="font-mono font-bold text-slate-200 tracking-wider text-base">{roomId}</span>
+              <span className="text-[10px] text-neutral-500 uppercase font-semibold block">Room Code</span>
+              <span className="font-mono font-bold text-neutral-200 tracking-wider text-base">{roomId}</span>
             </div>
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg bg-lime-500/10 hover:bg-lime-500/20 text-lime-400 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-lime-500 hover:bg-lime-400 text-black text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copied' : 'Copy Link'}</span>
