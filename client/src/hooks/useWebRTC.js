@@ -38,6 +38,9 @@ export function useWebRTC() {
   const [transfers, setTransfers] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // Mirrors myPeerInfo for use inside callbacks without stale closures
+  const myPeerInfoRef = useRef(null);
+
   // Active DataConnections map: peerId -> DataConnection
   const dataConnections = useRef(new Map());
   // Incoming file chunk buffers: fileId -> buffer
@@ -59,6 +62,7 @@ export function useWebRTC() {
   // Initialize device info
   useEffect(() => {
     const info = getDeviceInfo();
+    myPeerInfoRef.current = info;
     setMyPeerInfo(info);
 
     if (SIGNALING_URL && SIGNALING_URL !== 'http://localhost:3001') {
@@ -237,7 +241,7 @@ export function useWebRTC() {
 
     conn.on('open', () => {
       console.log('PeerConnection opened with:', conn.peer);
-      const info = getDeviceInfo();
+      const info = myPeerInfoRef.current || getDeviceInfo();
       conn.send(JSON.stringify({ type: 'PEER_INFO', peerInfo: info }));
 
       setPeers((prev) => {
@@ -563,7 +567,11 @@ export function useWebRTC() {
 
   // Update Peer Name
   const updateMyName = useCallback((newName) => {
-    setMyPeerInfo((prev) => ({ ...prev, name: newName }));
+    setMyPeerInfo((prev) => {
+      const updated = { ...prev, name: newName };
+      myPeerInfoRef.current = updated;
+      return updated;
+    });
   }, []);
 
   return {
