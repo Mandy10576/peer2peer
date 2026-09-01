@@ -42,6 +42,16 @@ export function useWebRTC() {
   const myPeerInfoRef = useRef(null);
   // Mirrors peerInstance so the unload handler always closes the live peer
   const peerInstanceRef = useRef(null);
+  // Mirrors roomId / host role for use inside connection event callbacks
+  const roomIdRef = useRef(null);
+  const amIHostRef = useRef(false);
+  // True while leaveRoom() is intentionally tearing connections down, so the
+  // host-takeover logic doesn't kick in on a deliberate exit
+  const leavingRef = useRef(false);
+  // Holds the latest attemptHostTakeover implementation (defined later, after
+  // initAsRoomHost/joinRoom) so setupDataConnection can call it without a
+  // circular useCallback dependency
+  const attemptHostTakeoverRef = useRef(() => {});
 
   // Active DataConnections map: peerId -> DataConnection
   const dataConnections = useRef(new Map());
@@ -279,6 +289,15 @@ export function useWebRTC() {
       setPeers((prev) => prev.filter((p) => p.socketId !== conn.peer));
       dataConnections.current.delete(conn.peer);
       if (soundEnabled) playSound('leave');
+
+      // If the connection that dropped was our connection to the room HOST
+      // (we are a client, not the host, and we didn't just leave on purpose),
+      // the host is gone. Take over the host role so the room stays joinable.
+      const currentRoom = roomIdRef.current;
+      const hostPeerId = currentRoom ? `aerodrop-${currentRoom}` : null;
+      if (!leavingRef.current && !amIHostRef.current && conn.peer === hostPeerId) {
+        attemptHostTakeoverRef.current(currentRoom);
+      }
     });
 
     conn.on('error', (err) => {
@@ -294,6 +313,9 @@ export function useWebRTC() {
     peer.on('open', (id) => {
       console.log('Host initialized for room:', code);
       setRoomId(code);
+      roomIdRef.current = code;
+      amIHostRef.current = true;
+      leavingRef.current = false;
       peerInstanceRef.current = peer;
       setPeerInstance(peer);
       if (typeof window !== 'undefined') {
@@ -349,6 +371,9 @@ export function useWebRTC() {
         conn.on('open', () => {
           isConnectedToHost = true;
           setRoomId(cleanCode);
+          roomIdRef.current = cleanCode;
+          amIHostRef.current = false;
+          leavingRef.current = false;
           peerInstanceRef.current = peer;
           setPeerInstance(peer);
           if (typeof window !== 'undefined') {
@@ -389,14 +414,52 @@ export function useWebRTC() {
     });
   }, [setupDataConnection, initAsRoomHost]);
 
+  // When the current host disappears, one of the remaining clients takes over
+  // the `aerodrop-{code}` peer ID so the room stays joinable for newcomers.
+  const attemptHostTakeover = useCallback((code) => {
+    if (!code || leavingRef.current || roomIdRef.current !== code) return;
+
+    // Small random stagger so multiple surviving clients don't all race to
+    // claim the same host ID at the exact same instant.
+    const delay = 250 + Math.random() * 500;
+    setTimeout(() => {
+      if (leavingRef.current || roomIdRef.current !== code || amIHostRef.current) return;
+
+      if (peerInstanceRef.current) {
+        peerInstanceRef.current.destroy();
+      }
+      dataConnections.current.clear();
+      setPeers([]);
+
+      initAsRoomHost(
+        code,
+        () => console.log('Host takeover succeeded for room:', code),
+        (err) => {
+          if (err.type === 'unavailable-id') {
+            // Someone else already claimed the host role — just rejoin as a client.
+            console.log('Another peer already reclaimed host. Rejoining as client:', code);
+            joinRoom(code).catch((joinErr) => console.warn('Rejoin after takeover failed:', joinErr));
+          }
+        }
+      );
+    }, delay);
+  }, [initAsRoomHost, joinRoom]);
+
+  useEffect(() => {
+    attemptHostTakeoverRef.current = attemptHostTakeover;
+  }, [attemptHostTakeover]);
+
   // Leave Room
   const leaveRoom = useCallback(() => {
+    leavingRef.current = true;
     if (peerInstance) {
       peerInstance.destroy();
     }
     dataConnections.current.forEach((conn) => conn.close());
     dataConnections.current.clear();
     peerInstanceRef.current = null;
+    roomIdRef.current = null;
+    amIHostRef.current = false;
     setPeerInstance(null);
     setRoomId(null);
     setPeers([]);
